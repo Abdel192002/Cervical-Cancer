@@ -1,44 +1,36 @@
+import tensorflow as tf
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
-    GlobalMaxPool2D, BatchNormalization, Dropout, Dense
+    Input, Conv2D, MaxPooling2D, Flatten, Dense, 
+    GlobalMaxPool2D, BatchNormalization, Dropout
 )
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import regularizers
-import tensorflow as tf
 
 class ResNet50C:
     def __init__(self, input_shape=(224, 224, 3), num_classes=5, learning_rate=1e-4):
-       
         self.input_shape = input_shape
         self.num_classes = num_classes
         self.learning_rate = learning_rate
         self.model = None
 
     def build_model(self):
-      
-        # Charger le modèle de base ResNet50 préentraîné sur ImageNet
-        r50 = ResNet50(weights='imagenet', include_top=False, input_shape=self.input_shape)
-        
-        # Geler les 50 premières couches
-        for layer in r50.layers[:50]:
-            layer.trainable = False
-        # Déverrouiller les couches restantes
-        for layer in r50.layers[50:]:
-            layer.trainable = True
+        # Définir l'entrée
+        input_image = Input(shape=self.input_shape, name="Image_Input")
 
-        # Ajouter des couches supplémentaires pour la classification
-        x = r50.output
-        x = GlobalMaxPool2D()(x)
-        x = BatchNormalization()(x)
-        x = Dropout(0.5)(x)
-        x = Dense(1024, activation='relu', kernel_regularizer=regularizers.l2(0.01))(x)
-        x = BatchNormalization()(x)
-        x = Dropout(0.5)(x)
-        output = Dense(self.num_classes, activation='softmax')(x)
+        # Branche convolutionnelle pour les images
+        x = Conv2D(32, (3, 3), activation="relu")(input_image)
+        x = MaxPooling2D((2, 2))(x)
+        x = Conv2D(64, (3, 3), activation="relu")(x)
+        x = MaxPooling2D((2, 2))(x)
+        x = Flatten()(x)
 
-        # Créer le modèle complet
-        self.model = Model(inputs=r50.input, outputs=output)
+        # Ajout d'une couche de classification
+        output = Dense(self.num_classes, activation="softmax", name="Classification_Output")(x)
+
+        # Construire le modèle
+        self.model = Model(inputs=input_image, outputs=output)
 
         # Compiler le modèle
         self.model.compile(
