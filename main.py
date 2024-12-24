@@ -2,6 +2,8 @@ from DataLoaders import DataLoader
 from Model import ResNet50C
 import keras
 from tensorflow.keras.callbacks import ReduceLROnPlateau, EarlyStopping, ModelCheckpoint
+from tensorflow.keras.layers import Input
+
 print(keras.__version__)
 data_loader = DataLoader(path = "C:/Users/nessa/Downloads/dataset_split_balanced/")
 
